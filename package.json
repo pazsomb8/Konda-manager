@@ -1,0 +1,26 @@
+{
+  "name": "konda-manager",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Local multi-wallet pump.fun trading dashboard",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=20.10"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @konda/server --filter @konda/web dev",
+    "build": "pnpm --filter @konda/web build",
+    "start": "pnpm build && pnpm --filter @konda/server start",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm --filter @konda/server test",
+    "hash-password": "pnpm --filter @konda/server hash-password"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild",
+      "bufferutil",
+      "utf-8-validate"
+    ]
+  }
+}
