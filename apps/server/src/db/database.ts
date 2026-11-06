@@ -1,8 +1,13 @@
-import Database from "better-sqlite3";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 
-export type Db = Database.Database;
+/**
+ * Uses Node's built-in SQLite (node:sqlite), so there is no native module to
+ * compile on install. This matters on Windows, where prebuilt binaries for
+ * new Node versions are often missing.
+ */
+export type Db = DatabaseSync;
 
 /**
  * Schema migrations, applied in order. Append new entries; never edit an
@@ -33,19 +38,32 @@ const MIGRATIONS: string[] = [
 
 export function openDatabase(filePath: string): Db {
   if (filePath !== ":memory:") mkdirSync(path.dirname(filePath), { recursive: true });
-  const db = new Database(filePath);
-  db.pragma("journal_mode = WAL");
-  db.pragma("foreign_keys = ON");
+  const db = new DatabaseSync(filePath);
+  db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
   migrate(db);
   return db;
 }
 
+/** Run `fn` inside a transaction; rolls back if it throws. */
+export function transaction<T>(db: Db, fn: () => T): T {
+  db.exec("BEGIN");
+  try {
+    const result = fn();
+    db.exec("COMMIT");
+    return result;
+  } catch (err) {
+    db.exec("ROLLBACK");
+    throw err;
+  }
+}
+
 function migrate(db: Db): void {
-  const current = db.pragma("user_version", { simple: true }) as number;
+  const row = db.prepare("PRAGMA user_version").get() as { user_version: number } | undefined;
+  const current = row?.user_version ?? 0;
   for (let i = current; i < MIGRATIONS.length; i++) {
-    db.transaction(() => {
+    transaction(db, () => {
       db.exec(MIGRATIONS[i]!);
-      db.pragma(`user_version = ${i + 1}`);
-    })();
+      db.exec(`PRAGMA user_version = ${i + 1}`);
+    });
   }
 }

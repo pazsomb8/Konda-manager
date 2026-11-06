@@ -6,7 +6,7 @@ Lokálisan futó dashboard több saját Solana wallet együttes kezelésére pum
 
 ## Követelmények
 
-- Node.js 20.10+ (ajánlott 22)
+- Node.js 22.13+ (ajánlott a legújabb LTS). Natív modult nem kell fordítani, a beépített `node:sqlite`-ot használja.
 - pnpm 10 (`corepack enable` után automatikusan a megfelelő verzió)
 - Helius (vagy más) RPC API-kulcs
 

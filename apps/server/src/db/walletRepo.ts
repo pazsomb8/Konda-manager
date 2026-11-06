@@ -33,17 +33,17 @@ export class WalletRepo {
   list(): WalletDto[] {
     const rows = this.db
       .prepare("SELECT * FROM wallets ORDER BY CASE role WHEN 'main' THEN 0 ELSE 1 END, id")
-      .all() as WalletRow[];
+      .all() as unknown as WalletRow[];
     return rows.map(toDto);
   }
 
   get(id: number): WalletDto | null {
-    const row = this.db.prepare("SELECT * FROM wallets WHERE id = ?").get(id) as WalletRow | undefined;
+    const row = this.db.prepare("SELECT * FROM wallets WHERE id = ?").get(id) as unknown as WalletRow | undefined;
     return row ? toDto(row) : null;
   }
 
   findByPubkey(pubkey: string): WalletDto | null {
-    const row = this.db.prepare("SELECT * FROM wallets WHERE pubkey = ?").get(pubkey) as WalletRow | undefined;
+    const row = this.db.prepare("SELECT * FROM wallets WHERE pubkey = ?").get(pubkey) as unknown as WalletRow | undefined;
     return row ? toDto(row) : null;
   }
 
@@ -60,7 +60,7 @@ export class WalletRepo {
 
   update(id: number, patch: UpdateWalletRequest): WalletDto | null {
     const cols: string[] = [];
-    const vals: unknown[] = [];
+    const vals: (string | number | null)[] = [];
     if (patch.label !== undefined) (cols.push("label = ?"), vals.push(patch.label));
     if (patch.enabled !== undefined) (cols.push("enabled = ?"), vals.push(patch.enabled ? 1 : 0));
     if (patch.copyBuySol !== undefined) (cols.push("copy_buy_sol = ?"), vals.push(patch.copyBuySol));
